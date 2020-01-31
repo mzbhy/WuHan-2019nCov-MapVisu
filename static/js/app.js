@@ -23,7 +23,7 @@ var provinces = {
 	"四川": "sichuan",
 	"贵州": "guizhou",
 	"云南": "yunnan",
-	"陕西": "shanxi1",
+	"陕西": "shaanxi",
 	"甘肃": "gansu",
 	"青海": "qinghai",
 	//5个自治区
@@ -63,6 +63,141 @@ var cityNumber = [];
 var provinceNumber = [];
 var totalNumber = {};
 
+var graphic = [
+	{
+		type: 'group',
+		left: 198,
+		top: pos.top - 4,
+		children: [{
+			type: 'line',
+			left: 0,
+			top: -20,
+			shape: {
+				x1: 0,
+				y1: 0,
+				x2: 60,
+				y2: 0
+			},
+			style: {
+				stroke: style.lineColor,
+			}
+		}, {
+			type: 'line',
+			left: 0,
+			top: 20,
+			shape: {
+				x1: 0,
+				y1: 0,
+				x2: 60,
+				y2: 0
+			},
+			style: {
+				stroke: style.lineColor,
+			}
+		}]
+	}, 
+	{
+		type: 'group',
+		left: 200,
+		top: pos.top,
+		children: [{
+			type: 'polyline',
+			left: 90,
+			top: -12,
+			shape: {
+				points: line
+			},
+			style: {
+				stroke: 'transparent',
+				key: name[0]
+			}
+		}, {
+			type: 'text',
+			left: 0,
+			top: 'middle',
+			style: {
+				text: '全国',
+				textAlign: 'center',
+				fill: style.textColor,
+				font: style.font
+			}
+		}, {
+			type: 'text',
+			left: 0,
+			top: 10,
+			style: {
+				text: 'CHINA',
+				textAlign: 'center',
+				fill: style.textColor,
+				font: '16px "Microsoft YaHei", sans-serif',
+			}
+		}],
+		onclick: function(){
+			renderMap('china',mapdata);
+		}
+	},
+	{
+		type: 'group',
+		left: 200,
+		top: pos.top + 50,
+		silent: true,
+		children: [{
+			type: 'text',
+			left: 0,
+			top: 30,
+			style: {
+				text: '确诊病例：' + totalNumber.confirmCount,
+				textAlign: 'center',
+				fill: style.textColor,
+				font: '16px "Microsoft YaHei", sans-serif',
+			}
+		}, {
+			type: 'text',
+			left: 0,
+			top: 50,
+			style: {
+				text: '疑似病例：' + totalNumber.suspectCount,
+
+				textAlign: 'center',
+				fill: style.textColor,
+				font: '16px "Microsoft YaHei", sans-serif',
+			}
+		}, {
+			type: 'text',
+			left: 0,
+			top: 70,
+			style: {
+				text: '治愈病例：'  + totalNumber.cure,
+				textAlign: 'center',
+				fill: style.textColor,
+				font: '16px "Microsoft YaHei", sans-serif',
+			}
+		}, {
+			type: 'text',
+			left: 0,
+			top: 90,
+			style: {
+				text: '死亡病例：'  + totalNumber.deadCount,
+				textAlign: 'center',
+				fill: style.textColor,
+				font: '16px "Microsoft YaHei", sans-serif',
+			}
+		}
+		// , {
+		// 	type: 'text',
+		// 	left: 0,
+		// 	top: 90,
+		// 	style: {
+		// 		text: '更新时间：'  + totalNumber.updateTime,
+		// 		textAlign: 'center',
+		// 		fill: style.textColor,
+		// 		font: '12px "Microsoft YaHei", sans-serif',
+		// 	}
+		// }
+		]
+	}
+];
+
 //绘制全国地图
 $.getJSON('static/map/china.json', function(data){
 	$.ajax({
@@ -79,22 +214,31 @@ $.getJSON('static/map/china.json', function(data){
 						cityNumber.push({
 							province:item[num].area,
 							city:item[num].city,
-							confirm:item[num].confirm
+							confirm:item[num].confirm,
+							suspect:item[num].suspect,
+							dead:item[num].dead,
+							heal:item[num].heal
 						})
 						var provFind = provinceNumber.find(prov=>prov.province == item[num].area);
 						if (provFind == undefined) {
 							provinceNumber.push({
 								province:item[num].area,
-								confirm:item[num].confirm
+								confirm:item[num].confirm,
+								suspect:item[num].suspect,
+								dead:item[num].dead,
+								heal:item[num].heal
 							})
 						}
 						else {
 							provFind.confirm += item[num].confirm;
+							provFind.suspect += item[num].suspect;
+							provFind.dead += item[num].dead;
+							provFind.heal += item[num].heal;
 						}
 					}	
 				}
-				console.log(cityNumber);
-				console.log(provinceNumber);
+				// console.log(cityNumber);
+				// console.log(provinceNumber);
 			}
 			else if (i == 'wuwei_ww_cn_day_counts') {
 				totalNumber.confirmCount = item[item.length - 1].confirm;
@@ -102,7 +246,7 @@ $.getJSON('static/map/china.json', function(data){
 				totalNumber.deadCount = item[item.length - 1].dead;
 				totalNumber.cure = item[item.length - 1].heal;
 				//totalNumber.updateTime = item[item.length - 1].updateTime;
-				console.log(totalNumber);
+				//console.log(totalNumber);
 			}
 		})
 	}
@@ -126,6 +270,25 @@ $.getJSON('static/map/china.json', function(data){
 	window.onresize = chart.resize;
 	bindClick();
 });
+
+function zoomAnimation(){
+	var count = null;
+	var zoom = function(per){
+		if(!count) count = per;
+		count = count + per;
+		chart.setOption({
+			geo: {
+				zoom: count
+			}
+		});
+		if(count < 1) window.requestAnimationFrame(function(){
+			zoom(0.2);
+		});
+	};
+	window.requestAnimationFrame(function(){
+		zoom(0.2);
+	});
+}
 
 function bindClick(){
 	//地图点击事件
@@ -173,7 +336,7 @@ function bindClick(){
 					else if (cityName.substring(cityName.length-2, cityName.length-1)=='地区') {
 						cityName=cityName.substring(0,cityName.length-2)
 					}
-					console.log(cityName);
+					//console.log(cityName);
 					var cityFind = cityNumber.find(city=>city.city == cityName);
 					var confirm = 0;
 					if (cityFind != undefined)
@@ -203,7 +366,7 @@ function bindClick(){
 			//  }); 
 			// }    
 		}else{
-			renderMap('china',mapdata);
+			// renderMap('china',mapdata);
 		}
 	});
 }
@@ -220,11 +383,11 @@ var option = {
 		trigger: 'item',
 		//formatter: '{b}',
 		formatter(params) {
-        	var provName = params.name;
+			var provName = params.name;
 			var provFind = provinceNumber.find(prov=>prov.province == provName);
 			var confirm = provFind.confirm;
-        	return `${params.name}
-        			确诊人数：${confirm}`;
+			return `${params.name}
+					确诊人数：${confirm}`;
 			// return `
 			// 	直接访问：${item.data.value}
 			// 	所需天数：${item.data.day}
@@ -253,7 +416,7 @@ var option = {
 
 };
 function renderMap(map,data){
-	console.log(data);
+	//console.log(data);
 	var isLabelShow = false;
 	var pieces =  [
 			{min: 50}, // 不指定 max，表示 max 为无限大（Infinity）。
@@ -267,7 +430,7 @@ function renderMap(map,data){
 		trigger: 'item',
 		formatter(params) {
 			var cityName = params.name;
-			console.log(cityName)
+			//console.log(cityName)
 			if (params.seriesName == '重庆') {
 				if (cityName == '石柱土家族自治县') {
 					cityName = '石柱县'
@@ -308,8 +471,8 @@ function renderMap(map,data){
 			if (cityFind != undefined)
 				confirm = cityFind.confirm;
 			
-        	return `${params.name}
-        			确诊人数：${confirm}`;
+			return `${params.name}
+					确诊人数：${confirm}`;
 		}
 	}
 	if (map == 'china') {
@@ -323,15 +486,83 @@ function renderMap(map,data){
 			{max: 0}
 		]
 		tooltip = {
-		trigger: 'item',
-		formatter(params) {
-        	var provName = params.name;
-			var provFind = provinceNumber.find(prov=>prov.province == provName);
-			var confirm = provFind.confirm;
-        	return `${params.name}
-        			确诊人数：${confirm}`;
+			trigger: 'item',
+			formatter(params) {
+				var provName = params.name;
+				var provFind = provinceNumber.find(prov=>prov.province == provName);
+				var confirm = provFind.confirm;
+				return `${params.name}
+						确诊人数：${confirm}`;
+			}
 		}
+		if (graphic.length > 3) {
+			graphic.pop(graphic[graphic.length - 1]);
+		}
+		graphic[0].children[0].shape.x2 = 60;
+		graphic[0].children[1].shape.x2 = 60;
+		graphic[2].children[0].style.text = '确诊病例：' + totalNumber.confirmCount;
+		graphic[2].children[1].style.text = '疑似病例：' + totalNumber.suspectCount;
+		graphic[2].children[2].style.text = '治愈病例：' + totalNumber.cure;
+		graphic[2].children[3].style.text = '死亡病例：' + totalNumber.deadCount;
 	}
+	else {
+		var breadcrumb = {
+			type: 'group',
+			id: name,
+			left: pos.leftCur + pos.leftPlus,
+			top: pos.top + 3,
+			silent: true,
+			children: [{
+				type: 'polyline',
+				left: -90,
+				top: -5,
+				shape: {
+					points: line
+				},
+				style: {
+					stroke: '#fff',
+					key: map
+				},
+			}, {
+				type: 'text',
+				left: -68,
+				top: 'middle',
+				style: {
+					text: map,
+					textAlign: 'center',
+					fill: style.textColor,
+					font: style.font
+				},
+			}, {
+				type: 'text',
+				left: -68,
+				top: 10,
+				style: {
+					name: map,
+					text: provinces[map].toUpperCase(),
+					textAlign: 'center',
+					fill: style.textColor,
+					font: '16px "Microsoft YaHei", sans-serif',
+				},
+			}]
+		}
+		graphic.push(breadcrumb);
+		graphic[0].children[0].shape.x2 = 60 + 15 + provinces[map].length * 12;
+		graphic[0].children[1].shape.x2 = 60 + 15 + provinces[map].length * 12;
+		var provFind = provinceNumber.find(prov=>prov.province == map);
+		if (provFind == undefined) {
+			graphic[2].children[0].style.text = '确诊病例：' + totalNumber.confirmCount;
+			graphic[2].children[1].style.text = '疑似病例：' + totalNumber.suspectCount;
+			graphic[2].children[2].style.text = '治愈病例：' + totalNumber.cure;
+			graphic[2].children[3].style.text = '死亡病例：' + totalNumber.deadCount;
+		}
+		else {
+			graphic[2].children[0].style.text = '确诊病例：' + provFind.confirm;
+			graphic[2].children[1].style.text = '疑似病例：' + provFind.suspect;
+			graphic[2].children[2].style.text = '治愈病例：' + provFind.heal;
+			graphic[2].children[3].style.text = '死亡病例：' + provFind.dead;
+		}
+
 	}
 	option.visualMap.pieces = pieces;
 	option.tooltip = tooltip;
@@ -392,134 +623,13 @@ function renderMap(map,data){
 			data:data
 		}
 	];
-	option.graphic = [
-		{
-			type: 'group',
-			left: 198,
-			top: pos.top - 4,
-			children: [{
-				type: 'line',
-				left: 0,
-				top: -20,
-				shape: {
-					x1: 0,
-					y1: 0,
-					x2: 60,
-					y2: 0
-				},
-				style: {
-					stroke: style.lineColor,
-				}
-			}, {
-				type: 'line',
-				left: 0,
-				top: 20,
-				shape: {
-					x1: 0,
-					y1: 0,
-					x2: 60,
-					y2: 0
-				},
-				style: {
-					stroke: style.lineColor,
-				}
-			}]
-		}, 
-		{
-			type: 'group',
-			left: 200,
-			top: pos.top,
-			children: [{
-				type: 'polyline',
-				left: 90,
-				top: -12,
-				shape: {
-					points: line
-				},
-				style: {
-					stroke: 'transparent',
-					key: name[0]
-				}
-			}, {
-				type: 'text',
-				left: 0,
-				top: 'middle',
-				style: {
-					text: '全国',
-					textAlign: 'center',
-					fill: style.textColor,
-					font: style.font
-				}
-			}, {
-				type: 'text',
-				left: 0,
-				top: 10,
-				style: {
-					text: 'CHINA',
-					textAlign: 'center',
-					fill: style.textColor,
-					font: '12px "Microsoft YaHei", sans-serif',
-				}
-			}
-			, {
-				type: 'text',
-				left: 0,
-				top: 30,
-				style: {
-					text: '确诊病例：' + totalNumber.confirmCount,
-					textAlign: 'center',
-					fill: style.textColor,
-					font: '12px "Microsoft YaHei", sans-serif',
-				}
-			}, {
-				type: 'text',
-				left: 0,
-				top: 45,
-				style: {
-					text: '疑似病例：' + totalNumber.suspectCount,
-					textAlign: 'center',
-					fill: style.textColor,
-					font: '12px "Microsoft YaHei", sans-serif',
-				}
-			}, {
-				type: 'text',
-				left: 0,
-				top: 60,
-				style: {
-					text: '治愈病例：'  + totalNumber.cure,
-					textAlign: 'center',
-					fill: style.textColor,
-					font: '12px "Microsoft YaHei", sans-serif',
-				}
-			}, {
-				type: 'text',
-				left: 0,
-				top: 75,
-				style: {
-					text: '死亡病例：'  + totalNumber.deadCount,
-					textAlign: 'center',
-					fill: style.textColor,
-					font: '12px "Microsoft YaHei", sans-serif',
-				}
-			}
-			// , {
-			// 	type: 'text',
-			// 	left: 0,
-			// 	top: 90,
-			// 	style: {
-			// 		text: '更新时间：'  + totalNumber.updateTime,
-			// 		textAlign: 'center',
-			// 		fill: style.textColor,
-			// 		font: '12px "Microsoft YaHei", sans-serif',
-			// 	}
-			// }
-			]
-		}
-	];
+	option.graphic = graphic;
 	//渲染地图
 	// chart.dispose();/*返回省级视图时销毁实例时清除返回按钮*/
 	// chart = echarts.init(document.getElementById('main'));
+	chart.clear();
 	chart.setOption(option);
+	zoomAnimation();
 	// window.onresize = chart.resize;
 	// bindClick();
 }
