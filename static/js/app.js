@@ -3,43 +3,43 @@ var chart = echarts.init(document.getElementById('main'));
 //34个省、市、自治区的名字拼音映射数组
 var provinces = {
 	//23个省
-	"台湾": "taiwan",
-	"河北": "hebei",
-	"山西": "shanxi",
-	"辽宁": "liaoning",
-	"吉林": "jilin",
-	"黑龙江": "heilongjiang",
-	"江苏": "jiangsu",
-	"浙江": "zhejiang",
-	"安徽": "anhui",
-	"福建": "fujian",
-	"江西": "jiangxi",
-	"山东": "shandong",
-	"河南": "henan",
-	"湖北": "hubei",
-	"湖南": "hunan",
-	"广东": "guangdong",
-	"海南": "hainan",
-	"四川": "sichuan",
-	"贵州": "guizhou",
-	"云南": "yunnan",
-	"陕西": "shaanxi",
-	"甘肃": "gansu",
-	"青海": "qinghai",
+	"台湾": ["710000", "taiwan"],
+	"河北": ["130000", "hebei"],
+	"山西": ["140000", "shanxi"],
+	"辽宁": ["210000", "liaoning"],
+	"吉林": ["220000", "jilin"],
+	"黑龙江": ["230000", "heilongjiang"],
+	"江苏": ["320000", "jiangsu"],
+	"浙江": ["330000", "zhejiang"],
+	"安徽": ["340000", "anhui"],
+	"福建": ["350000", "fujian"],
+	"江西": ["360000", "jiangxi"],
+	"山东": ["370000", "shandong"],
+	"河南": ["410000", "henan"],
+	"湖北": ["420000", "hubei"],
+	"湖南": ["430000", "hunan"],
+	"广东": ["440000", "guangdong"],
+	"海南": ["460000", "hainan"],
+	"四川": ["510000", "sichuan"],
+	"贵州": ["520000", "guizhou"],
+	"云南": ["530000", "yunnan"],
+	"陕西": ["610000", "shaanxi"],
+	"甘肃": ["620000", "gansu"],
+	"青海": ["630000", "qinghai"],
 	//5个自治区
-	"新疆": "xinjiang",
-	"广西": "guangxi",
-	"内蒙古": "neimenggu",
-	"宁夏": "ningxia",
-	"西藏": "xizang",
+	"新疆": ["650000", "xinjiang"],
+	"广西": ["450000", "guangxi"],
+	"内蒙古": ["150000", "neimenggu"],
+	"宁夏": ["640000", "ningxia"],
+	"西藏": ["540000", "xizang"],
 	//4个直辖市
-	"北京": "beijing",
-	"天津": "tianjin",
-	"上海": "shanghai",
-	"重庆": "chongqing",
+	"北京": ["110000", "beijing"],
+	"天津": ["120000", "tianjin"],
+	"上海": ["310000", "shanghai"],
+	"重庆": ["500000", "chongqing"],
 	//2个特别行政区
-	"香港": "xianggang",
-	"澳门": "aomen"
+	"香港": ["810000", "xianggang"],
+	"澳门": ["820000", "aomen"]
 };
 
 //直辖市和特别行政区-只有二级地图，没有三级地图
@@ -201,50 +201,42 @@ var graphic = [
 //绘制全国地图
 $.getJSON('static/map/china.json', function(data){
 	$.ajax({
-	url: "https://service-n9zsbooc-1252957949.gz.apigw.tencentcs.com/release/qq", //json文件位置
+	url: "https://service-0gg71fu4-1252957949.gz.apigw.tencentcs.com/release/dingxiangyuan", //json文件位置
 	type: "GET", //请求方式为get
 	async: false, //同步
 	dataType: "json", //返回数据格式为json
 	success: function(data1) { //请求成功完成后要执行的方法 
 		//each循环 使用$.each方法遍历返回的数据date
 		$.each(data1.data, function(i, item) {
-			if (i == 'wuwei_ww_area_counts') {
+			if (i == 'getAreaStat') {
 				for (var num = item.length - 1; num >= 0; num--) {
-					if (item[num].country == "中国") {
+					provinceNumber.push({
+						province:item[num].provinceShortName,
+						confirm:item[num].confirmedCount,
+						suspect:item[num].suspectedCount,
+						dead:item[num].deadCount,
+						heal:item[num].curedCount
+					})
+					for (var cityNum = item[num].cities.length - 1; cityNum >= 0; cityNum--) {
 						cityNumber.push({
-							province:item[num].area,
-							city:item[num].city,
-							confirm:item[num].confirm,
-							suspect:item[num].suspect,
-							dead:item[num].dead,
-							heal:item[num].heal
+							province:item[num].provinceShortName,
+							city:item[num].cities[cityNum].cityName,
+							confirm:item[num].cities[cityNum].confirmedCount,
+							suspect:item[num].cities[cityNum].suspectedCount,
+							dead:item[num].cities[cityNum].deadCount,
+							heal:item[num].cities[cityNum].curedCount,
+							cityId:item[num].cities[cityNum].locationId
 						})
-						var provFind = provinceNumber.find(prov=>prov.province == item[num].area);
-						if (provFind == undefined) {
-							provinceNumber.push({
-								province:item[num].area,
-								confirm:item[num].confirm,
-								suspect:item[num].suspect,
-								dead:item[num].dead,
-								heal:item[num].heal
-							})
-						}
-						else {
-							provFind.confirm += item[num].confirm;
-							provFind.suspect += item[num].suspect;
-							provFind.dead += item[num].dead;
-							provFind.heal += item[num].heal;
-						}
-					}	
+					}
 				}
 				// console.log(cityNumber);
 				// console.log(provinceNumber);
 			}
-			else if (i == 'wuwei_ww_cn_day_counts') {
-				totalNumber.confirmCount = item[item.length - 1].confirm;
-				totalNumber.suspectCount = item[item.length - 1].suspect;
-				totalNumber.deadCount = item[item.length - 1].dead;
-				totalNumber.cure = item[item.length - 1].heal;
+			else if (i == 'getStatisticsService') {
+				totalNumber.confirmCount = item.confirmedCount;
+				totalNumber.suspectCount = item.suspectedCount;
+				totalNumber.deadCount = item.deadCount;
+				totalNumber.cure = item.curedCount;
 				//totalNumber.updateTime = item[item.length - 1].updateTime;
 				//console.log(totalNumber);
 			}
@@ -296,55 +288,21 @@ function bindClick(){
 		//console.log( params );
 		if( params.name in provinces ){
 			//如果点击的是34个省、市、自治区，绘制选中地区的二级地图
-			$.getJSON('static/map/province/'+ provinces[params.name] +'.json', function(data){
+			$.getJSON('https://geo.datav.aliyun.com/areas/bound/'+ provinces[params.name][0] +'_full.json', function(data){
 				echarts.registerMap( params.name, data);
 				var d = [];
 				for( var i=0;i<data.features.length;i++ ){
-					var cityName = data.features[i].properties.name;
-					if (params.name == '重庆') {
-						if (cityName == '石柱土家族自治县') {
-							cityName = '石柱县'
-						}
-						else if (cityName == '秀山土家族苗族自治县') {
-							cityName = '秀山县'
-						}
-						else if (cityName == '开县') {
-							cityName = '开州区'
-						}
-						else if (cityName == '梁平县') {
-							cityName = '梁平区'
-						}
-					}
-					else if (cityName == '大兴安岭地区') {
-						cityName = '大兴安岭'
-					}
-					else if (cityName == '浦东新区') {
-						cityName = '浦东'
-					}
-					else if (cityName == '恩施土家族苗族自治州') {
-						cityName = '恩施州'
-					}
-					else if (cityName[cityName.length-1]=='市') {
-						cityName=cityName.substring(0,cityName.length-1)
-					}
-					else if (cityName[cityName.length-1]=='区') {
-						cityName=cityName.substring(0,cityName.length-1)
-					}
-					else if (cityName[cityName.length-1]=='县') {
-						cityName=cityName.substring(0,cityName.length-1)
-					}
-					else if (cityName.substring(cityName.length-2, cityName.length-1)=='地区') {
-						cityName=cityName.substring(0,cityName.length-2)
-					}
+					var cityID = data.features[i].properties.adcode;
 					//console.log(cityName);
-					var cityFind = cityNumber.find(city=>city.city == cityName);
+					var cityFind = cityNumber.find(city=>city.cityId == cityID);
 					var confirm = 0;
-					if (cityFind != undefined)
+					if (cityFind != undefined) {
 						confirm = cityFind.confirm;
-					d.push({
-						name:data.features[i].properties.name,
-						value:confirm
-					})
+						d.push({
+							name:data.features[i].properties.name,
+							value:[cityFind.cityId, confirm]
+						})
+					}
 				}
 				renderMap(params.name,d);
 			});
@@ -429,50 +387,26 @@ function renderMap(map,data){
 	var tooltip = {
 		trigger: 'item',
 		formatter(params) {
-			var cityName = params.name;
-			//console.log(cityName)
-			if (params.seriesName == '重庆') {
-				if (cityName == '石柱土家族自治县') {
-					cityName = '石柱县'
-				}
-				else if (cityName == '秀山土家族苗族自治县') {
-					cityName = '秀山县'
-				}
-				else if (cityName == '开县') {
-					cityName = '开州区'
-				}
-				else if (cityName == '梁平县') {
-					cityName = '梁平区'
-				}
-			}
-			else if (cityName == '大兴安岭地区') {
-				cityName = '大兴安岭'
-			}
-			else if (cityName == '浦东新区') {
-				cityName = '浦东'
-			}
-			else if (cityName == '恩施土家族苗族自治州') {
-				cityName = '恩施州'
-			}
-			else if (cityName[cityName.length-1]=='市') {
-				cityName=cityName.substring(0,cityName.length-1)
-			}
-			else if (cityName[cityName.length-1]=='区') {
-				cityName=cityName.substring(0,cityName.length-1)
-			}
-			else if (cityName[cityName.length-1]=='县') {
-				cityName=cityName.substring(0,cityName.length-1)
-			}
-			else if (cityName.substring(cityName.length-2, cityName.length-1)=='地区') {
-				cityName=cityName.substring(0,cityName.length-2)
-			}
-			var cityFind = cityNumber.find(city=>city.city == cityName);
 			var confirm = 0;
-			if (cityFind != undefined)
-				confirm = cityFind.confirm;
+			var suspect = 0;
+			var dead = 0;
+			var heal = 0;
+			if (params.data != undefined) {
+				var cityId = params.data.value[0];
+				var cityFind = cityNumber.find(city=>city.cityId == cityId);
 			
-			return `${params.name}
-					确诊人数：${confirm}`;
+				if (cityFind != undefined) {
+					confirm = cityFind.confirm;
+					suspect = cityFind.suspect;
+					dead = cityFind.dead;
+					heal = cityFind.heal;
+				}
+			}			
+			return `${params.name} <br/>
+					确诊病例：${confirm} <br/>
+					疑似病例：${suspect} <br/>
+					治愈病例：${heal} <br/>
+					死亡病例：${dead}`;
 		}
 	}
 	if (map == 'china') {
@@ -480,19 +414,27 @@ function renderMap(map,data){
 		pieces = [
 			{min: 1000}, // 不指定 max，表示 max 为无限大（Infinity）。
 			{min: 500, max: 1000},
-			{min: 100, max: 499},
+			{min: 300, max: 499},
+			{min: 100, max: 299},
 			{min: 10, max: 99},
-			{min: 1, max: 9},
-			{max: 0}
+			{min: 1, max: 9}
 		]
 		tooltip = {
 			trigger: 'item',
 			formatter(params) {
 				var provName = params.name;
 				var provFind = provinceNumber.find(prov=>prov.province == provName);
-				var confirm = provFind.confirm;
-				return `${params.name}
-						确诊人数：${confirm}`;
+				if (provFind != undefined) {
+					var confirm = provFind.confirm;
+					var suspect = provFind.suspect;
+					var dead = provFind.dead;
+					var heal = provFind.heal;
+					return `${params.name} <br/>
+							确诊病例：${confirm} <br/>
+							疑似病例：${suspect} <br/>
+							治愈病例：${heal} <br/>
+							死亡病例：${dead}`;	
+				}
 			}
 		}
 		if (graphic.length > 3) {
@@ -539,7 +481,7 @@ function renderMap(map,data){
 				top: 10,
 				style: {
 					name: map,
-					text: provinces[map].toUpperCase(),
+					text: provinces[map][1].toUpperCase(),
 					textAlign: 'center',
 					fill: style.textColor,
 					font: '16px "Microsoft YaHei", sans-serif',
@@ -547,8 +489,8 @@ function renderMap(map,data){
 			}]
 		}
 		graphic.push(breadcrumb);
-		graphic[0].children[0].shape.x2 = 60 + 15 + provinces[map].length * 12;
-		graphic[0].children[1].shape.x2 = 60 + 15 + provinces[map].length * 12;
+		graphic[0].children[0].shape.x2 = 60 + 15 + provinces[map][1].length * 12;
+		graphic[0].children[1].shape.x2 = 60 + 15 + provinces[map][1].length * 12;
 		var provFind = provinceNumber.find(prov=>prov.province == map);
 		if (provFind == undefined) {
 			graphic[2].children[0].style.text = '确诊病例：' + totalNumber.confirmCount;
