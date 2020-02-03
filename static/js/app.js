@@ -288,7 +288,7 @@ function bindClick(){
 		//console.log( params );
 		if( params.name in provinces ){
 			//如果点击的是34个省、市、自治区，绘制选中地区的二级地图
-			$.getJSON('https://geo.datav.aliyun.com/areas/bound/'+ provinces[params.name][0] +'_full.json', function(data){
+			$.getJSON('static/map/'+ provinces[params.name][0] +'_geojson_full.json', function(data){
 				echarts.registerMap( params.name, data);
 				var d = [];
 				for( var i=0;i<data.features.length;i++ ){
