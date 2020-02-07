@@ -295,6 +295,9 @@ function bindClick(){
 					var cityID = data.features[i].properties.adcode;
 					//console.log(cityName);
 					var cityFind = cityNumber.find(city=>city.cityId == cityID);
+					if (cityFind == undefined) {
+						cityFind = cityNumber.find(city=>city.cityId == cityID + 1);
+					}
 					var confirm = 0;
 					if (cityFind != undefined) {
 						confirm = cityFind.confirm;
