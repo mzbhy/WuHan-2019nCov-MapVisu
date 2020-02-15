@@ -42,6 +42,22 @@ var provinces = {
 	"澳门": ["820000", "aomen"]
 };
 
+// 新疆、云南单独处理
+var xinjiangMap = {
+	"昌吉回族自治州": "昌吉州",
+	"巴音郭楞蒙古自治州": "巴州",
+	"石河子市": "兵团第八师石河子市",
+	"五家渠市": "兵团第六师五家渠市"
+}
+
+var yunnanMap = {
+	"大理白族自治州": "大理州",
+	"红河哈尼族彝族自治州": "红河州",
+	"德宏傣族景颇族自治州": "德宏州",
+	"楚雄彝族自治州": "楚雄州",
+	"文山壮族苗族自治州": "文山州"
+}
+
 //直辖市和特别行政区-只有二级地图，没有三级地图
 var special = ["北京","天津","上海","重庆","香港","澳门"];
 var mapdata = [];
@@ -296,7 +312,16 @@ function bindClick(){
 					//console.log(cityName);
 					var cityFind = cityNumber.find(city=>city.cityId == cityID);
 					if (cityFind == undefined) {
-						cityFind = cityNumber.find(city=>city.cityId == cityID + 1);
+						if ( params.name == "新疆") {
+							var cityName = data.features[i].properties.name;
+							if (cityName in xinjiangMap)
+								cityFind = cityNumber.find(city=>city.city == xinjiangMap[cityName])
+						}
+						else if ( params.name == "云南") {
+							var cityName = data.features[i].properties.name;
+							if (cityName in yunnanMap)
+								cityFind = cityNumber.find(city=>city.city == yunnanMap[cityName])
+						}
 					}
 					var confirm = 0;
 					if (cityFind != undefined) {
